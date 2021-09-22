@@ -1,97 +1,110 @@
+import { nanoid } from "nanoid";
+import { useState } from 'react';
+import From from './components/Form';
+import Todo from './components/Todo';
+import FilterButton from './components/FilterButton';
 import './App.css';
 
+const FILTER_MAP = {
+  All: () => true,
+  Active: task => !task.completed,
+  Completed: task => task.completed
+};
+
+const FILTER_NAMES = Object.keys(FILTER_MAP);
+
+console.log(FILTER_NAMES);
+
 function App() {
+  const [name, setName] = useState('');
+  const [filter, setFilter] = useState('All');
+
+  const [tasks, setTasks] = useState([
+    { id: "todo-0", name: "Eat", completed: true },
+    { id: "todo-1", name: "Sleep", completed: false },
+    { id: "todo-2", name: "Repeat", completed: false },
+  ]);
+
+  const remainingTasksNumber = tasks
+    .filter(({ completed }) => completed === false)
+    .length;
+
+  const addTaskHandler = () => {
+    setTasks([
+      ...tasks,
+      { id: "todo-" + nanoid(), name: name, completed: false }
+    ]);
+    setName('');
+  };
+
+  const inputChangeHandler = value => {
+    setName(value);
+  };
+
+  const deleteTask = id => {
+    setTasks(tasks => tasks.filter(task => id !== task.id));
+  };
+
+  const updateEditedTask = (id, newName) => {
+    const editedTaskList = tasks.map(task => {
+      return id === task.id
+        ? {...task, name: newName}
+        : task;
+    });
+
+    setTasks(editedTaskList);
+  }
+
+  const toggleTaskCompleted = id => {
+    const updatedTasks = tasks.map(task => {
+      return id === task.id
+        ? { ...task, completed: !task.completed }
+        : task
+    });
+    setTasks(updatedTasks);
+  };
+
   return (
     <div className="todoapp stack-large">
-      <h1>TodoMatic</h1>
-      <form>
-        <h2 className="label-wrapper">
-          <label htmlFor="new-todo-input" className="label__lg">
-            What needs to be done?
-          </label>
-        </h2>
-        <input
-          type="text"
-          id="new-todo-input"
-          className="input input__lg"
-          name="text"
-          autoComplete="off"
-        />
-        <button type="submit" className="btn btn__primary btn__lg">
-          Add
-        </button>
-      </form>
+      <h1>React GraphQL Todo</h1>
+      <From
+        name={name}
+        addTaskHandler={addTaskHandler}
+        inputChangeHandler={inputChangeHandler}
+      />
       <div className="filters btn-group stack-exception">
-        <button type="button" className="btn toggle-btn" aria-pressed="true">
-          <span className="visually-hidden">Show </span>
-          <span>all</span>
-          <span className="visually-hidden"> tasks</span>
-        </button>
-        <button type="button" className="btn toggle-btn" aria-pressed="false">
-          <span className="visually-hidden">Show </span>
-          <span>Active</span>
-          <span className="visually-hidden"> tasks</span>
-        </button>
-        <button type="button" className="btn toggle-btn" aria-pressed="false">
-          <span className="visually-hidden">Show </span>
-          <span>Completed</span>
-          <span className="visually-hidden"> tasks</span>
-        </button>
+        { 
+          FILTER_NAMES.map(name =>
+            <FilterButton
+              key={name}
+              name={name}
+              isPressed={name === filter}
+              setFilter={setFilter}
+            />
+          )
+        }
       </div>
       <h2 id="list-heading">
-        3 tasks remaining
+        { remainingTasksNumber } tasks remaining
       </h2>
       <ul className="todo-list stack-large stack-exception"
         aria-labelledby="list-heading"
       >
-        <li className="todo stack-small">
-          <div className="c-cb">
-            <input id="todo-0" type="checkbox" defaultChecked={true} />
-            <label className="todo-label" htmlFor="todo-0">
-              Eat
-            </label>
-          </div>
-          <div className="btn-group">
-            <button type="button" className="btn">
-              Edit <span className="visually-hidden">Eat</span>
-            </button>
-            <button type="button" className="btn btn__danger">
-              Delete <span className="visually-hidden">Eat</span>
-            </button>
-          </div>
-        </li>
-        <li className="todo stack-small">
-          <div className="c-cb">
-            <input id="todo-1" type="checkbox" />
-            <label className="todo-label" htmlFor="todo-1">
-              Sleep
-            </label>
-          </div>
-          <div className="btn-group">
-            <button type="button" className="btn">
-              Edit <span className="visually-hidden">Sleep</span>
-            </button>
-            <button type="button" className="btn btn__danger">
-              Delete <span className="visually-hidden">Sleep</span>
-            </button>
-          </div>
-        </li>
-        <li className="todo stack-small">
-          <div className="c-cb">
-            <input id="todo-2" type="checkbox" />
-            <label className="todo-label" htmlFor="todo-2">
-              Repeat
-            </label>
-          </div>
-          <div className="btn-group">
-            <button type="button" className="btn">
-              Edit <span className="visually-hidden">Repeat</span>
-            </button>
-            <button type="button" className="btn btn__danger">
-              Delete <span className="visually-hidden">Repeat</span>
-            </button>
-          </div>
-        </li>
+        {
+          tasks
+            .filter(FILTER_MAP[filter])
+            .map(task =>
+              <Todo
+                id={task.id}
+                key={task.id}
+                name={task.name}
+                completed={task.completed}
+                deleteTask={deleteTask}
+                updateTask={updateEditedTask}
+                toggleTaskCompleted={toggleTaskCompleted}
+              />
+          )
+        }
       </ul>
     </div>
   );
