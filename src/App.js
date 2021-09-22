@@ -13,8 +13,6 @@ const FILTER_MAP = {
 
 const FILTER_NAMES = Object.keys(FILTER_MAP);
 
-console.log(FILTER_NAMES);
-
 function App() {
   const [name, setName] = useState('');
   const [filter, setFilter] = useState('All');
