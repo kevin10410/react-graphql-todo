@@ -75,6 +75,10 @@ body {
   cursor: pointer;
   text-transform: capitalize;
 }
+.btn:disabled, .btn[disabled]{
+  cursor: not-allowed;
+  opacity: 0.7;
+}
 .btn.toggle-btn {
   border-width: 1px;
   border-color: #d3d3d3;
@@ -246,6 +250,9 @@ body {
   z-index: 1;
   margin: 0;
   opacity: 0;
+}
+.c-cb > input[type="checkbox"]:disabled {
+  cursor: wait;
 }
 .c-cb > label {
   font-size: inherit;
