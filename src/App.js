@@ -1,7 +1,9 @@
-import { nanoid } from "nanoid";
 import { useState } from 'react';
+import { useMutation, useQuery } from '@apollo/client';
+import { QUERY_TASK, ADD_TASK } from './graphql/query';
+
 import From from './components/Form';
-import Todo from './components/Todo';
+import Tasks from './components/Tasks';
 import FilterButton from './components/FilterButton';
 import './App.css';
 
@@ -14,52 +16,50 @@ const FILTER_MAP = {
 const FILTER_NAMES = Object.keys(FILTER_MAP);
 
 function App() {
+  const {
+    data: queryData,
+    error: queryError,
+    loading: queryLoading,
+    refetch: queryRefetch,
+  } = useQuery(QUERY_TASK);
+
+  const [
+    addTask,
+    {
+      error: addError,
+      loading: addLoading,
+    }
+  ] = useMutation(ADD_TASK, {
+    refetchQueries: [QUERY_TASK],
+    onQueryUpdated(observableQuery) {
+      setName('');
+      return observableQuery.refetch();
+    },
+  });
+
   const [name, setName] = useState('');
   const [filter, setFilter] = useState('All');
 
-  const [tasks, setTasks] = useState([
-    { id: "todo-0", name: "Eat", completed: true },
-    { id: "todo-1", name: "Sleep", completed: false },
-    { id: "todo-2", name: "Repeat", completed: false },
-  ]);
+  const tasks = queryData?.queryTask
+    .filter(FILTER_MAP[filter]);
 
-  const remainingTasksNumber = tasks
-    .filter(({ completed }) => completed === false)
-    .length;
+  const remainingTasksNumber = queryLoading || queryError
+    ? 0
+    : queryData.queryTask
+        .filter(({ completed }) => completed === false)
+        .length;
 
-  const addTaskHandler = () => {
-    setTasks([
-      ...tasks,
-      { id: "todo-" + nanoid(), name: name, completed: false }
-    ]);
-    setName('');
-  };
 
   const inputChangeHandler = value => {
     setName(value);
   };
 
-  const deleteTask = id => {
-    setTasks(tasks => tasks.filter(task => id !== task.id));
-  };
-
-  const updateEditedTask = (id, newName) => {
-    const editedTaskList = tasks.map(task => {
-      return id === task.id
-        ? {...task, name: newName}
-        : task;
-    });
-
-    setTasks(editedTaskList);
-  }
-
-  const toggleTaskCompleted = id => {
-    const updatedTasks = tasks.map(task => {
-      return id === task.id
-        ? { ...task, completed: !task.completed }
-        : task
-    });
-    setTasks(updatedTasks);
+  const addTaskHandler = () => {
+    addTask({
+      variables: {
+        title: name,
+      },
+    })
   };
 
   return (
@@ -67,6 +67,8 @@ function App() {
       <h1>React GraphQL Todo</h1>
       <From
         name={name}
+        error={addError}
+        loading={addLoading}
         addTaskHandler={addTaskHandler}
         inputChangeHandler={inputChangeHandler}
       />
@@ -85,25 +87,12 @@ function App() {
       <h2 id="list-heading">
         { remainingTasksNumber } tasks remaining
       </h2>
-      <ul className="todo-list stack-large stack-exception"
-        aria-labelledby="list-heading"
-      >
-        {
-          tasks
-            .filter(FILTER_MAP[filter])
-            .map(task =>
-              <Todo
-                id={task.id}
-                key={task.id}
-                name={task.name}
-                completed={task.completed}
-                deleteTask={deleteTask}
-                updateTask={updateEditedTask}
-                toggleTaskCompleted={toggleTaskCompleted}
-              />
-          )
-        }
-      </ul>
+      <Tasks
+        tasks={tasks}
+        error={queryError}
+        loading={queryLoading}
+        queryRefetch={queryRefetch}
+      />
     </div>
   );
 }

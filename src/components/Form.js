@@ -1,5 +1,7 @@
-const Form = props => {
+import { faSpinner } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
+const Form = props => {
   const submitHandler = e => {
     e.preventDefault();
     props.addTaskHandler();
@@ -8,6 +10,18 @@ const Form = props => {
   const inputChanged = e => {
     props.inputChangeHandler(e.target.value)
   };
+
+  if (props.error) return <p>Error...</p>
+
+  if (props.loading) return (
+    <h2 className="label-wrapper">
+      <FontAwesomeIcon
+        spin
+        size="2x"
+        icon={faSpinner}
+      />
+    </h2>
+  );
 
   return (
     <form onSubmit={submitHandler}>
