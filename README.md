@@ -4,9 +4,9 @@ A Todolist App with React.js & GraphQL
 
 Livesite: https://kevin10410.github.io/react-graphql-todo/
 ### Frontend
-* React.js
-* graphql
-* @apollo/client
+* [React.js](https://reactjs.org/)
+* [graphql](https://graphql.org/)
+* [@apollo/client](https://www.apollographql.com/docs/react/)
 
 ### Backend
 * [Dgraph](https://dgraph.io/)
